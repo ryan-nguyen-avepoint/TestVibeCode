@@ -38,6 +38,7 @@ export default function ChatWindow({ socket, onMobileMenuOpen }: ChatWindowProps
   const [showScrollDown, setShowScrollDown] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [leaving, setLeaving] = useState(false);
+  const isComposingRef = useRef(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
@@ -121,6 +122,8 @@ export default function ChatWindow({ socket, onMobileMenuOpen }: ChatWindowProps
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
+    // Ignore Enter during IME composition (prevents duplicate messages on Mac)
+    if (e.nativeEvent.isComposing || isComposingRef.current) return;
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSend();
@@ -523,6 +526,8 @@ export default function ChatWindow({ socket, onMobileMenuOpen }: ChatWindowProps
               value={input}
               onChange={handleInputChange}
               onKeyDown={handleKeyDown}
+              onCompositionStart={() => { isComposingRef.current = true; }}
+              onCompositionEnd={() => { isComposingRef.current = false; }}
               placeholder={`Message ${activeRoom?.name || ''}...`}
               rows={1}
               className="input-field resize-none py-2.5 pr-12 min-h-[44px] max-h-32 text-sm md:text-base"
