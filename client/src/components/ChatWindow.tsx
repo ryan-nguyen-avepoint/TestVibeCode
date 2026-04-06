@@ -74,7 +74,19 @@ export default function ChatWindow({ socket, onMobileMenuOpen }: ChatWindowProps
     try {
       const { data } = await roomApi.getMessages(roomId, cursor);
       if (cursor) {
+        // Preserve scroll position when prepending older messages
+        const container = messagesContainerRef.current;
+        const prevScrollHeight = container?.scrollHeight || 0;
+
         prependMessages(roomId, data.messages, data.hasMore);
+
+        // After DOM update, restore scroll position so view doesn't jump
+        requestAnimationFrame(() => {
+          if (container) {
+            const newScrollHeight = container.scrollHeight;
+            container.scrollTop = newScrollHeight - prevScrollHeight;
+          }
+        });
       } else {
         setMessages(roomId, data.messages, data.hasMore);
         setTimeout(scrollToBottom, 100);
@@ -102,6 +114,11 @@ export default function ChatWindow({ socket, onMobileMenuOpen }: ChatWindowProps
     if (!container) return;
     const atBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 100;
     setShowScrollDown(!atBottom);
+
+    // Auto-load older messages when scrolled near the top
+    if (container.scrollTop < 100 && !loadingMessages && activeRoomId && hasMoreMessages[activeRoomId]) {
+      loadMore();
+    }
   };
 
   const handleSend = async () => {
@@ -335,16 +352,19 @@ export default function ChatWindow({ socket, onMobileMenuOpen }: ChatWindowProps
         {/* Load More */}
         {hasMoreMessages[activeRoomId] && (
           <div className="text-center py-3">
-            <button
-              onClick={loadMore}
-              disabled={loadingMessages}
-              className="btn-secondary text-xs py-1.5 px-4"
-            >
-              {loadingMessages ? (
-                <Loader2 className="w-4 h-4 animate-spin inline mr-1" />
-              ) : null}
-              Load older messages
-            </button>
+            {loadingMessages ? (
+              <div className="flex items-center justify-center gap-2 t-text-m text-xs">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Loading older messages...
+              </div>
+            ) : (
+              <button
+                onClick={loadMore}
+                className="btn-secondary text-xs py-1.5 px-4"
+              >
+                Load older messages
+              </button>
+            )}
           </div>
         )}
 
