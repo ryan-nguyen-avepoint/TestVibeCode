@@ -211,6 +211,8 @@ export const useStore = create<AppStore>((set, get) => ({
 
   addMessage: (message) => {
     const roomMessages = get().messages[message.roomId] || [];
+    // Deduplicate: skip if message with same ID already exists
+    if (roomMessages.some((m) => m.id === message.id)) return;
     set({
       messages: {
         ...get().messages,
