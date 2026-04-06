@@ -398,7 +398,7 @@ export default function ChatWindow({ socket, onMobileMenuOpen }: ChatWindowProps
                       </div>
                     )}
 
-                    <div className={`${grouped && !isOwn ? 'ml-[42px]' : ''} ${grouped && isOwn ? 'mr-[42px]' : ''}`}>
+                    <div className={`${grouped && !isOwn ? 'ml-[42px]' : ''} ${grouped && isOwn ? 'mr-[42px]' : ''} ${isOwn ? 'flex flex-col items-end' : ''}`}>
                       {/* Username & time */}
                       {!grouped && (
                         <div className={`flex items-center gap-2 mb-1 ${isOwn ? 'justify-end' : ''}`}>
